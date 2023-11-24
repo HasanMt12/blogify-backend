@@ -17,14 +17,14 @@ const registerUser = async (req, res, next) => {
       password,
     });
 
-    return res.status(201).json({   // Respond with user details 
+    return res.status(201).json({   // Respond with user details and generated JWT token 
       _id: user._id,
       avatar: user.avatar,
       name: user.name,
       email: user.email,
       verified: user.verified,
       admin: user.admin,
-      token: null,
+      token: await user.generateJWT(),
     });
   } catch (error) {
     next(error);
