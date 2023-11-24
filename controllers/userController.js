@@ -1,4 +1,7 @@
 import User from "../models/User.js";
+import { fileRemover } from "../utils/fileRemover.js";
+import { uploadPicture } from "../middleware/uploadPictureMiddleware.js";
+
 
               //{ User registration endpoint }//
 const registerUser = async (req, res, next) => {
@@ -119,5 +122,67 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
+
+
+            //{ User profile picture update endpoint }//
+const updateProfilePicture = async (req, res, next) => {
+  try {
+     // Configure multer middleware for handling profile picture upload
+    const upload = uploadPicture.single("profilePicture");
+
+    upload(req, res, async function (err) {  // Execute the file upload process
+      if (err) {
+        const error = new Error(
+          "An unknown error occured when uploading " + err.message
+        );
+        next(error);
+      } else {
+        // Handle successful file upload
+
+        // Check if a file was uploaded
+        if (req.file) {
+          let filename;
+          let updatedUser = await User.findById(req.user._id);
+          filename = updatedUser.avatar;  // Remove the previous profile picture file, if it exists
+          if (filename) {
+            fileRemover(filename);
+          }
+          updatedUser.avatar = req.file.filename;  // Update the user's avatar with the new filename
+          await updatedUser.save();  
+          res.json({                        // Respond with the updated user details and JWT token
+            _id: updatedUser._id,
+            avatar: updatedUser.avatar,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            verified: updatedUser.verified,
+            admin: updatedUser.admin,
+            token: await updatedUser.generateJWT(),
+          });
+        } else {
+            // Handle the case where no file was uploaded
+          let filename;
+          let updatedUser = await User.findById(req.user._id);
+          filename = updatedUser.avatar;
+          updatedUser.avatar = "";
+          await updatedUser.save();
+          fileRemover(filename);      // Remove the previous profile picture file
+          res.json({
+            _id: updatedUser._id,       // Respond with the updated user details and JWT token
+            avatar: updatedUser.avatar,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            verified: updatedUser.verified,
+            admin: updatedUser.admin,
+            token: await updatedUser.generateJWT(),
+          });
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 // Export the user authentication and profile management functions
-export { registerUser, loginUser, userProfile, updateProfile } 
+export { registerUser, loginUser, userProfile, updateProfile, updateProfilePicture } 

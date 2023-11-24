@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import cors from "cors";
+import path from "path";
 import {
   errorResponserHandler,
   invalidPathHandler,
@@ -16,6 +17,8 @@ connectDB();
 app.use(cors())
 app.use(express.json())
 
+const { url } = import.meta;
+const __dirname = path.dirname(url);
 
 
 app.get("/", (req, res) => {
@@ -24,7 +27,12 @@ app.get("/", (req, res) => {
 
 
 app.use("/api/users", userRoutes);
+
+// static assets
+app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
+
 app.use(invalidPathHandler);
 app.use(errorResponserHandler);
+
 const PORT = process.env.PORT || 5000
 app.listen(PORT, ()=> console.log(`server is running in port 5000 ${PORT}`))
