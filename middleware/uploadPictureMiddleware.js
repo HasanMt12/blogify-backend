@@ -7,8 +7,7 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-
-  // Configure storage for multer to manage file uploads
+// Configure storage for multer to manage file uploads
 const storage = multer.diskStorage({
   // Set the destination folder for uploaded files
   destination: (req, file, cb) => {
@@ -20,14 +19,13 @@ const storage = multer.diskStorage({
   },
 });
 
-// Initialize multer middleware with configured storage and additional options //
-  
+// Initialize multer middleware with configured storage and additional options
 const uploadPicture = multer({
   storage: storage,
   limits: {
     fileSize: 1 * 1000000, // 1MB
   },
-   // Define a filter to allow only specific file types (e.g., images)
+  // Define a filter to allow only specific file types (e.g., images)
   fileFilter: function (req, file, cb) {
     let ext = path.extname(file.originalname);
     if (ext !== ".png" && ext !== ".jpg" && ext !== ".jpeg") {
