@@ -2,6 +2,7 @@ import { uploadPicture } from "../middleware/uploadPictureMiddleware.js";
 import Post from "../models/Post.js";
 import { fileRemover } from "../utils/fileRemover.js";
 import { v4 as uuidv4 } from "uuid";
+import Comment from "../models/Comment.js";
 
 const createPost = async (req, res, next) => {
   try {
@@ -23,6 +24,8 @@ const createPost = async (req, res, next) => {
     next(error);
   }
 };
+
+
 
 const updatePost = async (req, res, next) => {
   try {
@@ -80,7 +83,36 @@ const updatePost = async (req, res, next) => {
 
 
 
+/**
+ * Deletes a blog post and associated comments.
+ */
+
+const deletePost = async (req, res, next) => {
+  try {
+
+    // Find and delete the blog post by its slug
+    const post = await Post.findOneAndDelete({ slug: req.params.slug });
+   
+    if (!post) {      // Check if the post exists
+      const error = new Error("Post was not found");
+      return next(error);
+    }
+
+    // Delete all comments associated with the deleted post
+    await Comment.deleteMany({ post: post._id });
+  
+    return res.json({  
+      message: "Post is successfully deleted",
+    });
+  } catch (error) {
+    // Pass any errors to the error-handling middleware
+    next(error);
+  }
+};
 
 
 
-export { createPost, updatePost, };
+
+
+
+export { createPost, updatePost, deletePost };
