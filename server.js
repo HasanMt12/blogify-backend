@@ -11,6 +11,7 @@ import {
 // Routes
 import userRoutes from "./routes/userRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
+import commentRoutes from "./routes/commentRoutes.js";
 
 dotenv.config();
 const app = express()
@@ -29,6 +30,8 @@ app.get("/", (req, res) => {
 
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/comments", commentRoutes);
+
 // static assets
 app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
 

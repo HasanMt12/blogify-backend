@@ -111,8 +111,60 @@ const deletePost = async (req, res, next) => {
 };
 
 
+/**
+ * Retrieves a single post by its slug, including user details and associated comments with nested replies.
+ */
+
+const getPost = async (req, res, next) => {
+  try {
+                           // Find the post by its unique slug and populate user details and comments with nested replies
+    const post = await Post.findOne({ slug: req.params.slug }).populate([
+                               
+      {
+        path: "user",      // Populate the 'user' field, selecting specific properties ('avatar', 'name')
+        select: ["avatar", "name"],
+      },
+      {
+        path: "comments",  // Populate the 'comments' field with specific conditions
+        match: {
+          check: true,    // Include only comments with 'check' set to true
+          parent: null,   // Include only top-level comments (not replies)
+        },
+        populate: [
+                                
+          {
+            path: "user",             // Populate the 'user' field within each comment, selecting specific properties ('avatar', 'name')
+            select: ["avatar", "name"],
+          },
+          {
+                             
+            path: "replies",          // Populate the 'replies' field within each comment with specific conditions
+            match: {
+              check: true,
+            },
+            populate: [
+              {
+                path: "user",        // Populate the 'user' field within each reply, selecting specific properties ('avatar', 'name')
+                select: ["avatar", "name"],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    if (!post) {
+      const error = new Error("Post was not found");
+      return next(error);
+    }
+
+    return res.json(post);
+  } catch (error) {
+    next(error);
+  }
+};
 
 
 
 
-export { createPost, updatePost, deletePost };
+export { createPost, updatePost, deletePost, getPost };

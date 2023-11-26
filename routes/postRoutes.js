@@ -3,7 +3,8 @@ const router = express.Router();
 import {
   createPost,
   updatePost,
-  deletePost
+  deletePost,
+  getPost
 } from "../controllers/postControllers.js";
 import { userGuard, adminGuard } from "../middleware/isLoggedIn.js";
 
@@ -13,5 +14,6 @@ router
   .route("/:slug")
   .put(userGuard, adminGuard, updatePost)
   .delete(userGuard, adminGuard, deletePost)
+  .get(getPost);
   
 export default router;
