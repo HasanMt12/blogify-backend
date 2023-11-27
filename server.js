@@ -16,6 +16,7 @@ import commentRoutes from "./routes/commentRoutes.js";
 dotenv.config();
 const app = express()
 connectDB();
+
 app.use(cors())
 app.use(express.json())
 
@@ -33,7 +34,12 @@ app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 
 // static assets
-app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
+// app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
+app.use("/uploads", (req, res, next) => {
+  console.log("Received request for:", path.join("/uploads", req.url));
+  next();
+}, express.static("uploads"));
+
 
 app.use(invalidPathHandler);
 app.use(errorResponserHandler);

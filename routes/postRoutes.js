@@ -4,11 +4,15 @@ import {
   createPost,
   updatePost,
   deletePost,
-  getPost
+  getPost,
+  getAllPosts
 } from "../controllers/postControllers.js";
 import { userGuard, adminGuard } from "../middleware/isLoggedIn.js";
 
-router.route("/").post(userGuard, adminGuard, createPost)
+router
+  .route("/")
+  .post(userGuard, adminGuard, createPost)
+  .get(getAllPosts)
 
 router
   .route("/:slug")
