@@ -42,4 +42,53 @@ const createComment = async (req, res, next) => {
   }
 };
 
-export { createComment };
+/**
+ * Updates a comment's description in the database.
+ * 
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next function.
+ * @returns {Object} - JSON response containing the updated comment.
+ * @throws {Error} - If the comment is not found or an error occurs during the update.
+ */
+
+const updateComment = async (req, res, next) => {
+  try {
+    const { desc } = req.body;       // Destructure the 'desc' property from the request body
+
+    const comment = await Comment.findById(req.params.commentId);    // Find the comment by commentId
+
+    if (!comment) { 
+      const error = new Error("Comment was not found");    // If the comment is not found, throw an error
+      return next(error);
+    }
+
+    comment.desc = desc || comment.desc;    // Update the comment's description with the new value or keep the existing value
+
+    const updatedComment = await comment.save();      // Save the updated comment to the database
+    return res.json(updatedComment);                  // Respond with the updated comment
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteComment = async (req, res, next) => {
+  try {
+    const comment = await Comment.findByIdAndDelete(req.params.commentId);    // Find and delete the comment by commentId
+
+    await Comment.deleteMany({ parent: comment._id }); // Delete all child comments associated with the deleted comment
+
+    if (!comment) {
+      const error = new Error("Comment was not found");  // If the comment is not found, throw an error
+      return next(error);
+    }
+
+    return res.json({      // Respond with a success message                                  
+      message: "Comment is deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { createComment, updateComment , deleteComment };
