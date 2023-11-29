@@ -167,21 +167,73 @@ const getPost = async (req, res, next) => {
 
 
 
-const getAllPosts = async (req, res, next) => {
-  try {
-      const posts = await Post.find({}).populate([
-        {
-          path: "user",
-          select: ["avatar", "name", "verified"]
-        }
-      ]);
+// const getAllPosts = async (req, res, next) => {
+//   try {
+//       const posts = await Post.find({}).populate([
+//         {
+//           path: "user",
+//           select: ["avatar", "name", "verified"]
+//         }
+//       ]);
 
    
-    res.json(posts);
+//     res.json(posts);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+const getAllPosts = async (req, res, next) => {
+  try {
+    const filter = req.query.searchKeyword;
+    let where = {};
+
+    // Apply a case-insensitive regex filter to post titles if searchKeyword is provided
+    if (filter) {
+      where.title = { $regex: filter, $options: "i" };
+    }
+
+    let query = Post.find(where);
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * pageSize;
+
+    // Count total matching documents for pagination metadata
+    const total = await Post.find(where).countDocuments();
+    const pages = Math.ceil(total / pageSize);
+
+    // Set response headers for metadata
+    res.header({
+      "x-filter": filter,
+      "x-totalcount": JSON.stringify(total),
+      "x-currentpage": JSON.stringify(page),
+      "x-pagesize": JSON.stringify(pageSize),
+      "x-totalpagecount": JSON.stringify(pages),
+    });
+
+    // Return an empty array if requested page exceeds total pages
+    if (page > pages) {
+      return res.json([]);
+    }
+
+    // Execute the query with pagination, population, and sorting
+    const result = await query
+      .skip(skip)
+      .limit(pageSize)
+      .populate([
+        {
+          path: "user",
+          select: ["avatar", "name", "verified"], // Include specific user details
+        },
+      ])
+      .sort({ updatedAt: "desc" });
+
+    return res.json(result);
   } catch (error) {
-    next(error);
+    next(error); // Pass the error to the next middleware
   }
 };
+
 
 
 export { createPost, updatePost, deletePost, getPost, getAllPosts };
