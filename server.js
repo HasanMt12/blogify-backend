@@ -12,6 +12,7 @@ import {
 import userRoutes from "./routes/userRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
+import blogCategoriesRoutes from "./routes/BlogCategoriesRoutes.js";
 
 dotenv.config();
 const app = express()
@@ -32,6 +33,7 @@ app.get("/", (req, res) => {
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
+app.use("/api/post-categories", blogCategoriesRoutes);
 
 // static assets
 // app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
@@ -40,7 +42,11 @@ app.use("/uploads", (req, res, next) => {
   next();
 }, express.static("uploads"));
 
-
+app.use(cors({
+  origin: 'https://mind-space02.netlify.app',
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
 app.use(invalidPathHandler);
 app.use(errorResponserHandler);
 

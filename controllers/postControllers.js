@@ -25,8 +25,56 @@ const createPost = async (req, res, next) => {
   }
 };
 
+/**
+ * Creates a new blog post.
+ */
+// const createPost = async (req, res, next) => {
+//   try {
+//     // Handle file upload
+//     const upload = uploadPicture.single("postPicture");
+//     upload(req, res, async function (err) {
+//       if (err) {
+//         const error = new Error(
+//           "An unknown error occurred when uploading " + err.message
+//         );
+//         next(error);
+//       } else {
+//         // Extract data from req.body and req.file
+//         const { body, categories, title, tags, caption } = JSON.parse(
+//           req.body.document
+//         );
 
+//         // Create a new post instance
+//         const newPost = new Post({
+//           title,
+//           caption,
+//           body,
+//           tags,
+//           categories,
+//         });
 
+//         // Save the post data
+//         await newPost.save();
+
+//         // Update the post with the uploaded file
+//         if (req.file) {
+//           const filename = req.file.filename;
+//           newPost.photo = filename;
+//           await newPost.save();
+//         }
+
+//         // Return the created post in the response
+//         res.status(201).json(newPost);
+//       }
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+/**
+ * Updated a blog post.
+ */
 const updatePost = async (req, res, next) => {
   try {
     const post = await Post.findOne({ slug: req.params.slug });
@@ -54,7 +102,7 @@ const updatePost = async (req, res, next) => {
     upload(req, res, async function (err) {
       if (err) {
         const error = new Error(
-          "An unknown error occured when uploading " + err.message
+          "An unknown error occurred when uploading " + err.message
         );
         next(error);
       } else {
@@ -80,6 +128,7 @@ const updatePost = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 
@@ -115,36 +164,86 @@ const deletePost = async (req, res, next) => {
  * Retrieves a single post by its slug, including user details and associated comments with nested replies.
  */
 
+// const getPost = async (req, res, next) => {
+//   try {
+//                            // Find the post by its unique slug and populate user details and comments with nested replies
+//     const post = await Post.findOne({ slug: req.params.slug }).populate([
+                               
+//       {
+//         path: "user",      // Populate the 'user' field, selecting specific properties ('avatar', 'name')
+//         select: ["avatar", "name"],
+//       },
+//       {
+//         path: "comments",  // Populate the 'comments' field with specific conditions
+//         match: {
+//           check: true,    // Include only comments with 'check' set to true
+//           parent: null,   // Include only top-level comments (not replies)
+//         },
+//         populate: [
+                                
+//           {
+//             path: "user",             // Populate the 'user' field within each comment, selecting specific properties ('avatar', 'name')
+//             select: ["avatar", "name"],
+//           },
+//           {
+                             
+//             path: "replies",          // Populate the 'replies' field within each comment with specific conditions
+//             match: {
+//               check: true,
+//             },
+//             populate: [
+//               {
+//                 path: "user",        // Populate the 'user' field within each reply, selecting specific properties ('avatar', 'name')
+//                 select: ["avatar", "name"],
+//               },
+//             ],
+//           },
+//         ],
+//       },
+//     ]);
+
+//     if (!post) {
+//       const error = new Error("Post was not found");
+//       return next(error);
+//     }
+
+//     return res.json(post);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+
 const getPost = async (req, res, next) => {
   try {
-                           // Find the post by its unique slug and populate user details and comments with nested replies
     const post = await Post.findOne({ slug: req.params.slug }).populate([
-                               
       {
-        path: "user",      // Populate the 'user' field, selecting specific properties ('avatar', 'name')
+        path: "user",
         select: ["avatar", "name"],
       },
       {
-        path: "comments",  // Populate the 'comments' field with specific conditions
+        path: "categories",
+        select: ["title"],
+      },
+      {
+        path: "comments",
         match: {
-          check: true,    // Include only comments with 'check' set to true
-          parent: null,   // Include only top-level comments (not replies)
+          check: true,
+          parent: null,
         },
         populate: [
-                                
           {
-            path: "user",             // Populate the 'user' field within each comment, selecting specific properties ('avatar', 'name')
+            path: "user",
             select: ["avatar", "name"],
           },
           {
-                             
-            path: "replies",          // Populate the 'replies' field within each comment with specific conditions
+            path: "replies",
             match: {
               check: true,
             },
             populate: [
               {
-                path: "user",        // Populate the 'user' field within each reply, selecting specific properties ('avatar', 'name')
+                path: "user",
                 select: ["avatar", "name"],
               },
             ],
@@ -164,73 +263,46 @@ const getPost = async (req, res, next) => {
   }
 };
 
-
-
-
-// const getAllPosts = async (req, res, next) => {
-//   try {
-//       const posts = await Post.find({}).populate([
-//         {
-//           path: "user",
-//           select: ["avatar", "name", "verified"]
-//         }
-//       ]);
-
-   
-//     res.json(posts);
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
 const getAllPosts = async (req, res, next) => {
   try {
     const filter = req.query.searchKeyword;
     let where = {};
-
-    // Apply a case-insensitive regex filter to post titles if searchKeyword is provided
     if (filter) {
       where.title = { $regex: filter, $options: "i" };
     }
-
     let query = Post.find(where);
     const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.limit) || 5;
+    const pageSize = parseInt(req.query.limit) || 4;
     const skip = (page - 1) * pageSize;
-
-    // Count total matching documents for pagination metadata
     const total = await Post.find(where).countDocuments();
     const pages = Math.ceil(total / pageSize);
 
-    // Set response headers for metadata
     res.header({
       "x-filter": filter,
       "x-totalcount": JSON.stringify(total),
       "x-currentpage": JSON.stringify(page),
       "x-pagesize": JSON.stringify(pageSize),
       "x-totalpagecount": JSON.stringify(pages),
-    });
+    }) ;
 
-    // Return an empty array if requested page exceeds total pages
     if (page > pages) {
       return res.json([]);
     }
 
-    // Execute the query with pagination, population, and sorting
     const result = await query
       .skip(skip)
       .limit(pageSize)
       .populate([
         {
           path: "user",
-          select: ["avatar", "name", "verified"], // Include specific user details
+          select: ["avatar", "name", "verified"],
         },
       ])
       .sort({ updatedAt: "desc" });
 
     return res.json(result);
   } catch (error) {
-    next(error); // Pass the error to the next middleware
+    next(error);
   }
 };
 

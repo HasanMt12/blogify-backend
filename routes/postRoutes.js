@@ -11,13 +11,13 @@ import { userGuard, adminGuard } from "../middleware/isLoggedIn.js";
 
 router
   .route("/")
-  .post(userGuard, adminGuard, createPost)
+  .post(userGuard, createPost)
   .get(getAllPosts)
 
 router
   .route("/:slug")
-  .put(userGuard, adminGuard, updatePost)
-  .delete(userGuard, adminGuard, deletePost)
+  .put(userGuard,  updatePost)
+  .delete(userGuard,  deletePost)
   .get(getPost);
   
 export default router;
